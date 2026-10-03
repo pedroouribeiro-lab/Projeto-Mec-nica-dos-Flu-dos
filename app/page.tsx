@@ -1,19 +1,19 @@
 export default function HomePage() {
-  const cardStyle = {
-    backgroundColor: "#1E293B",
+  const card = {
+    background: "#1e293b",
     borderRadius: "16px",
-    padding: "20px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    padding: "24px",
+    boxShadow: "0 10px 20px rgba(0,0,0,0.3)",
   };
  
   return (
     <main
       style={{
         minHeight: "100vh",
-        backgroundColor: "#0F172A",
-        color: "white",
+        background: "#0f172a",
+        color: "#fff",
+        padding: "40px",
         fontFamily: "Arial, sans-serif",
-        padding: "30px",
       }}
     >
       <div
@@ -28,7 +28,7 @@ export default function HomePage() {
           <h1
             style={{
               margin: 0,
-              fontSize: "36px",
+              fontSize: "42px",
             }}
           >
             HydroCalc Pro
@@ -36,8 +36,8 @@ export default function HomePage() {
  
           <p
             style={{
-              color: "#94A3B8",
-              marginTop: "8px",
+              color: "#94a3b8",
+              marginTop: "10px",
             }}
           >
             Advanced Pumping System Design & Analysis Software
@@ -46,9 +46,9 @@ export default function HomePage() {
  
         <div
           style={{
-            backgroundColor: "#2563EB",
+            background: "#2563eb",
             padding: "12px 20px",
-            borderRadius: "12px",
+            borderRadius: "10px",
             fontWeight: "bold",
           }}
         >
@@ -59,28 +59,28 @@ export default function HomePage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+          gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
           gap: "20px",
           marginBottom: "30px",
         }}
       >
-        <div style={cardStyle}>
-          <h3>Vazão</h3>
+        <div style={card}>
+          <h3>🌊 Vazão</h3>
           <h2>0 m³/h</h2>
         </div>
  
-        <div style={cardStyle}>
-          <h3>Velocidade</h3>
+        <div style={card}>
+          <h3>⚡ Velocidade</h3>
           <h2>0 m/s</h2>
         </div>
  
-        <div style={cardStyle}>
-          <h3>Reynolds</h3>
+        <div style={card}>
+          <h3>📈 Reynolds</h3>
           <h2>0</h2>
         </div>
  
-        <div style={cardStyle}>
-          <h3>HMT</h3>
+        <div style={card}>
+          <h3>🚀 HMT</h3>
           <h2>0 mca</h2>
         </div>
       </div>
@@ -92,34 +92,33 @@ export default function HomePage() {
           gap: "20px",
         }}
       >
-        <div style={cardStyle}>
+        <div style={card}>
           <h2>Painel de Engenharia</h2>
  
-          <p style={{ color: "#CBD5E1" }}>
-            Sistema preparado para:
+          <p style={{ color: "#cbd5e1" }}>
+            Plataforma preparada para análises hidráulicas profissionais.
           </p>
  
           <ul>
-            <li>Dimensionamento Hidráulico</li>
-            <li>Número de Reynolds</li>
-            <li>Darcy-Weisbach</li>
-            <li>Swamee-Jain</li>
-            <li>Perdas Distribuídas</li>
-            <li>Perdas Localizadas</li>
-            <li>HMT</li>
-            <li>NPSH</li>
-            <li>Potência Hidráulica</li>
+            <li>✅ Reynolds</li>
+            <li>✅ Darcy-Weisbach</li>
+            <li>✅ Swamee-Jain</li>
+            <li>✅ Perdas Localizadas</li>
+            <li>✅ Perdas Distribuídas</li>
+            <li>✅ HMT</li>
+            <li>✅ NPSH</li>
+            <li>✅ Potência Hidráulica</li>
           </ul>
         </div>
  
-        <div style={cardStyle}>
+        <div style={card}>
           <h2>Módulos</h2>
  
-          <p>✅ Novo Projeto</p>
-          <p>✅ Análise Hidráulica</p>
-          <p>✅ Resultados</p>
-          <p>✅ Memória de Cálculo</p>
-          <p>✅ Relatórios</p>
+          <p>📁 Novo Projeto</p>
+          <p>🌊 Análise Hidráulica</p>
+          <p>📊 Resultados</p>
+          <p>🧮 Memória de Cálculo</p>
+          <p>📄 Relatórios</p>
         </div>
       </div>
     </main>
