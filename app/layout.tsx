@@ -45,7 +45,9 @@ export default function RootLayout({
                 marginTop: "20px",
               }}
             >
-              /Dashboard</Link>
+              /
+                Dashboard
+              </Link>
  
               /novo-projeto
                 Novo Projeto
@@ -81,3 +83,4 @@ export default function RootLayout({
     </html>
   );
 }
+ 
