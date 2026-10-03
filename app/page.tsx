@@ -6,88 +6,68 @@ export default function HomePage() {
         background: "#0F172A",
         color: "white",
         padding: "40px",
-        fontFamily: "Arial",
+        fontFamily: "Arial, sans-serif",
       }}
     >
-      <h1
-        style={{
-          fontSize: "36px",
-          marginBottom: "10px",
-        }}
-      >
-        HydroCalc Pro
-      </h1>
+      <h1>HydroCalc Pro</h1>
  
-      <p
-        style={{
-          color: "#CBD5E1",
-          marginBottom: "40px",
-        }}
-      >
+      <p>
         Advanced Pumping System Design & Analysis Software
       </p>
  
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+          gridTemplateColumns: "repeat(4, 1fr)",
           gap: "20px",
+          marginTop: "30px",
         }}
       >
         <div
           style={{
             background: "#1E293B",
             padding: "20px",
-            borderRadius: "12px",
+            borderRadius: "10px",
           }}
         >
           <h3>Vazão</h3>
-          <h2>0 m³/h</h2>
+          <p>0 m³/h</p>
         </div>
  
         <div
           style={{
             background: "#1E293B",
             padding: "20px",
-            borderRadius: "12px",
+            borderRadius: "10px",
           }}
         >
           <h3>Velocidade</h3>
-          <h2>0 m/s</h2>
+          <p>0 m/s</p>
         </div>
  
         <div
           style={{
             background: "#1E293B",
             padding: "20px",
-            borderRadius: "12px",
+            borderRadius: "10px",
           }}
         >
           <h3>Reynolds</h3>
-          <h2>0</h2>
+          <p>0</p>
         </div>
  
         <div
           style={{
             background: "#1E293B",
             padding: "20px",
-            borderRadius: "12px",
+            borderRadius: "10px",
           }}
         >
           <h3>HMT</h3>
-          <h2>0 mca</h2>
+          <p>0 mca</p>
         </div>
       </div>
+    </main>
+  );
+}
  
-      <div
-        style={{
-          marginTop: "40px",
-          background: "#1E293B",
-          padding: "25px",
-          borderRadius: "12px",
-        }}
-      >
-        <h2>Painel de Engenharia</h2>
- 
-        <p>
-     
