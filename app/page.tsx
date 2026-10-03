@@ -6,7 +6,7 @@ export default function HomePage() {
         background: "#0F172A",
         color: "white",
         padding: "40px",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "Arial"
       }}
     >
       <h1>HydroCalc Pro</h1>
@@ -18,56 +18,29 @@ export default function HomePage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
           gap: "20px",
-          marginTop: "30px",
+          marginTop: "40px",
+          maxWidth: "500px"
         }}
       >
-        <div
-          style={{
-            background: "#1E293B",
-            padding: "20px",
-            borderRadius: "10px",
-          }}
-        >
-          <h3>Vazão</h3>
-          <p>0 m³/h</p>
-        </div>
+        /novo-projeto📁 Novo Projeto</a>
  
-        <div
-          style={{
-            background: "#1E293B",
-            padding: "20px",
-            borderRadius: "10px",
-          }}
-        >
-          <h3>Velocidade</h3>
-          <p>0 m/s</p>
-        </div>
+        /analise-hidraulica
+          🌊 Análise Hidráulica
+        </a>
  
-        <div
-          style={{
-            background: "#1E293B",
-            padding: "20px",
-            borderRadius: "10px",
-          }}
-        >
-          <h3>Reynolds</h3>
-          <p>0</p>
-        </div>
+        /resultados
+          📊 Resultados
+        </a>
  
-        <div
-          style={{
-            background: "#1E293B",
-            padding: "20px",
-            borderRadius: "10px",
-          }}
-        >
-          <h3>HMT</h3>
-          <p>0 mca</p>
-        </div>
+        /memoria-calculo
+          🧮 Memória de Cálculo
+        </a>
+ 
+        /relatorios
+          📄 Relatórios
+        </a>
       </div>
     </main>
   );
 }
- 
