@@ -1,1 +1,16 @@
-
+export default function NovoProjeto() {
+  return (
+    <main
+      style={{
+        padding: "40px",
+        minHeight: "100vh",
+        background: "#0F172A",
+        color: "white",
+      }}
+    >
+      <h1>Novo Projeto</h1>
+ 
+      <p>Cadastro de projetos hidráulicos.</p>
+    </main>
+  );
+}
