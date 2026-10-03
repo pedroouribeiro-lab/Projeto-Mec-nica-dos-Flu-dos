@@ -1,33 +1,26 @@
+import Sidebar from "../../components/Sidebar";
+import Header from "../../components/Header";
+import HydraulicForm from "../../components/HydraulicForm";
+ 
 export default function AnaliseHidraulica() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        padding: "40px",
-        backgroundColor: "#0f172a",
-        color: "white",
-      }}
-    >
-      <h1>Análise Hidráulica</h1>
+    <>
+      <Sidebar />
  
-      <div
+      <main
         style={{
-          display: "grid",
-          gap: "15px",
-          maxWidth: "600px",
-          marginTop: "30px",
+          marginLeft: "260px",
+          minHeight: "100vh",
+          background: "#0F172A",
+          color: "white",
+          padding: "30px",
+          fontFamily: "Arial, sans-serif",
         }}
       >
-        <input placeholder="Vazão (m³/h)" />
-        <input placeholder="Diâmetro da Tubulação (mm)" />
-        <input placeholder="Comprimento da Tubulação (m)" />
-        <input placeholder="Rugosidade (mm)" />
-        <input placeholder="Altura de Recalque (m)" />
-        <input placeholder="Altura de Sucção (m)" />
+        <Header />
  
-        <button>Calcular</button>
-      </div>
-    </main>
+        <HydraulicForm />
+      </main>
+    </>
   );
 }
- 
