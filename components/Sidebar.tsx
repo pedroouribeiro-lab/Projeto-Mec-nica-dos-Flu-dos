@@ -1,4 +1,12 @@
+import Link from "next/link";
+ 
 export default function Sidebar() {
+  const linkStyle = {
+    color: "white",
+    textDecoration: "none",
+    fontSize: "18px",
+  };
+ 
   return (
     <div
       style={{
@@ -21,28 +29,40 @@ export default function Sidebar() {
         HydroCalc Pro
       </h2>
  
-      <hr
-        style={{
-          borderColor: "#374151",
-        }}
-      />
+      <hr />
  
       <div
         style={{
-          marginTop: "25px",
           display: "flex",
           flexDirection: "column",
-          gap: "15px",
+          gap: "25px",
+          marginTop: "25px",
         }}
       >
-        <p>🏠 Dashboard</p>
-        <p>📁 Novo Projeto</p>
-        <p>🌊 Análise Hidráulica</p>
-        <p>📊 Resultados</p>
-        <p>🧮 Memória de Cálculo</p>
-        <p>📄 Relatórios</p>
+        /
+          🏠 Dashboard
+        </Link>
+ 
+        /novo-projeto
+          📁 Novo Projeto
+        </Link>
+ 
+        /analise-hidraulica
+          🌊 Análise Hidráulica
+        </Link>
+ 
+        /resultados
+          📊 Resultados
+        </Link>
+ 
+        /memoria-calculo
+          🧮 Memória de Cálculo
+        </Link>
+ 
+        /relatorios
+          📄 Relatórios
+        </Link>
       </div>
     </div>
   );
 }
- 
