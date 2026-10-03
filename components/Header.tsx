@@ -12,11 +12,7 @@ export default function Header() {
       }}
     >
       <div>
-        <h2
-          style={{
-            margin: 0,
-          }}
-        >
+        <h2 style={{ margin: 0 }}>
           HydroCalc Pro
         </h2>
  
