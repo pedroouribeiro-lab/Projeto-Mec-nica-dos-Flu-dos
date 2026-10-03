@@ -12,13 +12,17 @@ export default function Header() {
       }}
     >
       <div>
-        <h2 style={{ margin: 0 }}>
+        <h2
+          style={{
+            margin: 0,
+          }}
+        >
           HydroCalc Pro
         </h2>
  
         <p
           style={{
-            margin: 0,
+            margin: "5px 0 0 0",
             color: "#94A3B8",
           }}
         >
@@ -39,3 +43,4 @@ export default function Header() {
     </div>
   );
 }
+ 
