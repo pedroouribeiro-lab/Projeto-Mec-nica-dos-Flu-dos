@@ -1,4 +1,5 @@
 import Sidebar from "../components/Sidebar";
+import { ProjetoProvider } from "../components/ProjetoContext";
 
 export const metadata = {
   title: "HydroCalc Pro",
@@ -19,16 +20,18 @@ export default function RootLayout({
           fontFamily: "Arial, sans-serif",
         }}
       >
-        <Sidebar />
-        <main
-          style={{
-            marginLeft: "260px",
-            minHeight: "100vh",
-            color: "white",
-          }}
-        >
-          {children}
-        </main>
+        <ProjetoProvider>
+          <Sidebar />
+          <main
+            style={{
+              marginLeft: "310px",
+              minHeight: "100vh",
+              color: "white",
+            }}
+          >
+            {children}
+          </main>
+        </ProjetoProvider>
       </body>
     </html>
   );
