@@ -430,3 +430,104 @@ export default function NovoProjetoPage() {
       )}
 
       <FormLinha
+        titulo={projeto.usarSuccao ? "Linha de recalque" : "Tubulação"}
+        descricao={
+          projeto.usarSuccao
+            ? "Trecho da saída da bomba até o reservatório de destino."
+            : "Tubulação única entre os dois reservatórios."
+        }
+        linha={projeto.recalque}
+        aoMudar={(l) => atualizar((p) => ({ ...p, recalque: l }))}
+      />
+
+      <Card
+        titulo="Bomba e energia"
+        descricao="O rendimento da bomba é obrigatório. Os demais campos são opcionais e liberam potência elétrica e custo."
+      >
+        <Grade>
+          <Campo
+            rotulo="Rendimento da bomba (%)"
+            valor={projeto.rendBomba}
+            aoMudar={(v) => atualizar((p) => ({ ...p, rendBomba: v }))}
+            placeholder="Ex.: 70"
+          />
+          <Campo
+            rotulo="Rendimento do motor (%)"
+            valor={projeto.rendMotor}
+            aoMudar={(v) => atualizar((p) => ({ ...p, rendMotor: v }))}
+            placeholder="Ex.: 90"
+          />
+          <Campo
+            rotulo="Operação (h/dia)"
+            valor={projeto.horasDia}
+            aoMudar={(v) => atualizar((p) => ({ ...p, horasDia: v }))}
+            placeholder="Ex.: 16"
+          />
+          <Campo
+            rotulo="Operação (dias/mês)"
+            valor={projeto.diasMes}
+            aoMudar={(v) => atualizar((p) => ({ ...p, diasMes: v }))}
+            placeholder="Ex.: 24"
+          />
+          <Campo
+            rotulo="Tarifa de energia (R$/kWh)"
+            valor={projeto.tarifa}
+            aoMudar={(v) => atualizar((p) => ({ ...p, tarifa: v }))}
+            placeholder="Ex.: 0,92"
+          />
+        </Grade>
+      </Card>
+
+      <Card
+        titulo="Cavitação (NPSH)"
+        descricao="Só é calculado com linha de sucção. Informe a pressão de vapor e o NPSH requerido do fabricante."
+      >
+        <Grade>
+          <Campo
+            rotulo="Pressão de vapor do fluido (kPa abs)"
+            valor={projeto.pressaoVapor}
+            aoMudar={(v) => atualizar((p) => ({ ...p, pressaoVapor: v }))}
+            placeholder="Ex.: 47,4"
+          />
+          <Campo
+            rotulo="NPSH requerido (m)"
+            valor={projeto.npshRequerido}
+            aoMudar={(v) => atualizar((p) => ({ ...p, npshRequerido: v }))}
+            placeholder="Ex.: 4,6"
+          />
+          <Campo
+            rotulo="Razão mínima segura NPSHA/NPSHR"
+            valor={projeto.razaoSegura}
+            aoMudar={(v) => atualizar((p) => ({ ...p, razaoSegura: v }))}
+            ajuda="Premissa editável. Use o critério definido pelo professor."
+          />
+          <Campo
+            rotulo="Condição adicional: cota de origem (m)"
+            valor={projeto.cotaOrigemAdicional}
+            aoMudar={(v) => atualizar((p) => ({ ...p, cotaOrigemAdicional: v }))}
+            placeholder="Ex.: 0,3 (opcional)"
+            ajuda="Nível do tanque de sucção na condição adicional."
+          />
+        </Grade>
+      </Card>
+
+      {resposta.resultado !== null ? (
+        <Aviso tipo="ok">
+          Dados completos. Abra a página <strong>Análise Hidráulica</strong> para ver os cálculos.{" "}
+          <Link href="/analise-hidraulica" style={{ color: cor.azulClaro }}>
+            Ir para Análise Hidráulica
+          </Link>
+        </Aviso>
+      ) : (
+        <Aviso tipo="alerta">
+          <strong>Pendências para calcular:</strong>
+          <ul style={{ margin: "8px 0 0 0", paddingLeft: "20px" }}>
+            {resposta.erros.map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+        </Aviso>
+      )}
+    </Pagina>
+  );
+}
