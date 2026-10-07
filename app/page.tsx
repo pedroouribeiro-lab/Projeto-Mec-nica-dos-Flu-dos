@@ -1,284 +1,178 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import Link from "next/link";
+import { Aviso, Card, Grade, Pagina, Tabela, cor, fmt } from "../components/UI";
+import { useProjeto } from "../components/ProjetoContext";
+import { calcularProjeto, type ClasseNpsh } from "../lib/hidraulica";
 
-type Resultado = {
-  vazaoM3s: number;
-  areaM2: number;
-  areaMm2: number;
-  velocidade: number;
-};
-
-function lerNumero(texto: string): number {
-  return parseFloat(texto.replace(",", "."));
+function textoClasse(classe: ClasseNpsh): string {
+  if (classe === "segura") {
+    return "Segura";
+  }
+  if (classe === "limitrofe") {
+    return "Limítrofe";
+  }
+  return "Incompatível";
 }
 
-export default function AnaliseHidraulicaPage() {
-  const [vazao, setVazao] = useState<string>("");
-  const [diametro, setDiametro] = useState<string>("");
-  const [comprimento, setComprimento] = useState<string>("");
-  const [rugosidade, setRugosidade] = useState<string>("");
-  const [erro, setErro] = useState<string>("");
-  const [resultado, setResultado] = useState<Resultado | null>(null);
-
-  function calcular() {
-    const q = lerNumero(vazao);
-    const d = lerNumero(diametro);
-    const l = lerNumero(comprimento);
-    const e = lerNumero(rugosidade);
-
-    if (isNaN(q) || isNaN(d) || isNaN(l) || isNaN(e)) {
-      setErro("Preencha todos os campos com valores numéricos.");
-      setResultado(null);
-      return;
-    }
-    if (q <= 0) {
-      setErro("A vazão deve ser maior que zero.");
-      setResultado(null);
-      return;
-    }
-    if (d <= 0) {
-      setErro("O diâmetro interno deve ser maior que zero.");
-      setResultado(null);
-      return;
-    }
-    if (l <= 0) {
-      setErro("O comprimento deve ser maior que zero.");
-      setResultado(null);
-      return;
-    }
-    if (e < 0) {
-      setErro("A rugosidade não pode ser negativa.");
-      setResultado(null);
-      return;
-    }
-    if (e >= d) {
-      setErro("A rugosidade deve ser menor que o diâmetro interno.");
-      setResultado(null);
-      return;
-    }
-
-    // Conversões de unidade
-    const vazaoM3s = q / 3600; // m³/h -> m³/s
-    const diametroM = d / 1000; // mm -> m
-
-    // 1. Área da tubulação: A = π × D² / 4
-    const areaM2 = (Math.PI * diametroM * diametroM) / 4;
-
-    // 2. Velocidade: V = Q / A
-    const velocidade = vazaoM3s / areaM2;
-
-    setErro("");
-    setResultado({
-      vazaoM3s: vazaoM3s,
-      areaM2: areaM2,
-      areaMm2: areaM2 * 1000000,
-      velocidade: velocidade,
-    });
+function corClasse(classe: ClasseNpsh): string {
+  if (classe === "segura") {
+    return cor.verde;
   }
-
-  function limpar() {
-    setVazao("");
-    setDiametro("");
-    setComprimento("");
-    setRugosidade("");
-    setErro("");
-    setResultado(null);
+  if (classe === "limitrofe") {
+    return cor.amarelo;
   }
+  return cor.vermelho;
+}
 
-  const cardStyle: CSSProperties = {
-    backgroundColor: "#111827",
-    border: "1px solid #1f2937",
-    borderRadius: "12px",
-    padding: "24px",
-    marginBottom: "24px",
-  };
-
-  const labelStyle: CSSProperties = {
-    display: "block",
-    fontSize: "13px",
-    color: "#9ca3af",
-    marginBottom: "6px",
-  };
-
-  const inputStyle: CSSProperties = {
-    width: "100%",
-    boxSizing: "border-box",
-    backgroundColor: "#0b1220",
-    border: "1px solid #374151",
-    borderRadius: "8px",
-    padding: "10px 12px",
-    color: "#f9fafb",
-    fontSize: "15px",
-    outline: "none",
-  };
-
-  const gridStyle: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "16px",
-  };
-
-  const botaoPrimario: CSSProperties = {
-    backgroundColor: "#2563eb",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "8px",
-    padding: "12px 28px",
-    fontSize: "14px",
-    fontWeight: 700,
-    letterSpacing: "0.05em",
-    cursor: "pointer",
-  };
-
-  const botaoSecundario: CSSProperties = {
-    backgroundColor: "transparent",
-    color: "#9ca3af",
-    border: "1px solid #374151",
-    borderRadius: "8px",
-    padding: "12px 24px",
-    fontSize: "14px",
-    cursor: "pointer",
-    marginLeft: "12px",
-  };
-
-  const resultadoBox: CSSProperties = {
-    backgroundColor: "#0b1220",
-    border: "1px solid #1f2937",
-    borderRadius: "10px",
-    padding: "18px",
-  };
-
-  const resultadoTitulo: CSSProperties = {
-    fontSize: "13px",
-    color: "#9ca3af",
-    marginBottom: "8px",
-  };
-
-  const resultadoValor: CSSProperties = {
-    fontSize: "28px",
-    fontWeight: 700,
-    color: "#60a5fa",
-  };
-
-  const resultadoUnidade: CSSProperties = {
-    fontSize: "14px",
-    color: "#9ca3af",
-    marginLeft: "6px",
-    fontWeight: 400,
-  };
-
+function Indicador(props: {
+  rotulo: string;
+  valor: string;
+  unidade?: string;
+  nota?: string;
+  corValor?: string;
+}) {
   return (
-    <div style={{ padding: "32px", color: "#f9fafb" }}>
-      <h1 style={{ fontSize: "26px", fontWeight: 700, margin: "0 0 6px 0" }}>
-        Análise Hidráulica
-      </h1>
-      <p style={{ color: "#9ca3af", margin: "0 0 28px 0", fontSize: "14px" }}>
-        Informe os dados da tubulação para calcular área e velocidade do fluido.
-      </p>
-
-      <div style={cardStyle}>
-        <h2 style={{ fontSize: "16px", fontWeight: 600, margin: "0 0 18px 0" }}>
-          Dados de entrada
-        </h2>
-
-        <div style={gridStyle}>
-          <div>
-            <label style={labelStyle}>Vazão (m³/h)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={vazao}
-              onChange={(ev) => setVazao(ev.target.value)}
-              placeholder="Ex.: 100"
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Diâmetro interno (mm)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={diametro}
-              onChange={(ev) => setDiametro(ev.target.value)}
-              placeholder="Ex.: 100"
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Comprimento (m)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={comprimento}
-              onChange={(ev) => setComprimento(ev.target.value)}
-              placeholder="Ex.: 50"
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Rugosidade (mm)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={rugosidade}
-              onChange={(ev) => setRugosidade(ev.target.value)}
-              placeholder="Ex.: 0.046"
-              style={inputStyle}
-            />
-          </div>
-        </div>
-
-        {erro !== "" && (
-          <p style={{ color: "#f87171", fontSize: "14px", marginTop: "16px" }}>
-            {erro}
-          </p>
-        )}
-
-        <div style={{ marginTop: "24px" }}>
-          <button type="button" onClick={calcular} style={botaoPrimario}>
-            CALCULAR
-          </button>
-          <button type="button" onClick={limpar} style={botaoSecundario}>
-            Limpar
-          </button>
-        </div>
+    <div
+      style={{
+        backgroundColor: cor.painel,
+        border: "1px solid " + cor.borda,
+        borderRadius: "12px",
+        padding: "20px",
+      }}
+    >
+      <div style={{ fontSize: "13px", color: cor.suave, marginBottom: "8px" }}>
+        {props.rotulo}
       </div>
-
-      {resultado !== null && (
-        <div style={cardStyle}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, margin: "0 0 18px 0" }}>
-            Resultados
-          </h2>
-
-          <div style={gridStyle}>
-            <div style={resultadoBox}>
-              <div style={resultadoTitulo}>Área da tubulação</div>
-              <div style={resultadoValor}>
-                {resultado.areaM2.toFixed(6)}
-                <span style={resultadoUnidade}>m²</span>
-              </div>
-              <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "6px" }}>
-                = {resultado.areaMm2.toFixed(1)} mm²
-              </div>
-            </div>
-
-            <div style={resultadoBox}>
-              <div style={resultadoTitulo}>Velocidade do fluido</div>
-              <div style={resultadoValor}>
-                {resultado.velocidade.toFixed(3)}
-                <span style={resultadoUnidade}>m/s</span>
-              </div>
-              <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "6px" }}>
-                Vazão = {resultado.vazaoM3s.toFixed(6)} m³/s
-              </div>
-            </div>
-          </div>
+      <div
+        style={{
+          fontSize: "28px",
+          fontWeight: 700,
+          color: props.corValor !== undefined ? props.corValor : cor.azulClaro,
+        }}
+      >
+        {props.valor}
+        {props.unidade !== undefined && (
+          <span style={{ fontSize: "14px", color: cor.suave, marginLeft: "6px", fontWeight: 400 }}>
+            {props.unidade}
+          </span>
+        )}
+      </div>
+      {props.nota !== undefined && (
+        <div style={{ fontSize: "13px", color: cor.apagado, marginTop: "6px" }}>
+          {props.nota}
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  const { projeto, carregado } = useProjeto();
+  const resposta = calcularProjeto(projeto);
+
+  if (!carregado) {
+    return (
+      <Pagina titulo="Dashboard">
+        <p style={{ color: cor.suave }}>Carregando dados do projeto...</p>
+      </Pagina>
+    );
+  }
+
+  const nomes = projeto.membros.filter((m) => m.trim() !== "");
+  const r = resposta.resultado;
+
+  return (
+    <Pagina titulo="Dashboard" subtitulo="Visão geral do projeto atual.">
+      <Card titulo="Projeto atual">
+        <Tabela
+          linhas={[
+            {
+              rotulo: "Nome do projeto",
+              valor: projeto.nome.trim() !== "" ? projeto.nome.trim() : "Sem nome",
+            },
+            { rotulo: "Integrantes do grupo", valor: nomes.length + " de 6" },
+            {
+              rotulo: "Situação dos dados",
+              valor: r !== null ? "Completos" : "Pendentes",
+              cor: r !== null ? cor.verde : cor.amarelo,
+            },
+          ]}
+        />
+      </Card>
+
+      {r === null ? (
+        <Aviso tipo="alerta">
+          Ainda faltam dados para calcular.{" "}
+          <Link href="/novo-projeto" style={{ color: cor.azulClaro }}>
+            Ir para Novo Projeto
+          </Link>
+        </Aviso>
+      ) : (
+        <div style={{ marginBottom: "24px" }}>
+          <Grade minimo={240}>
+            <Indicador
+              rotulo="Altura manométrica"
+              valor={fmt(r.alturaManometrica, 2)}
+              unidade="m"
+              nota={"Perdas totais: " + fmt(r.perdaTotal, 2) + " m"}
+            />
+            <Indicador
+              rotulo="Potência no eixo"
+              valor={fmt(r.potenciaEixo / 1000, 2)}
+              unidade="kW"
+              nota={"Hidráulica: " + fmt(r.potenciaHidraulica / 1000, 2) + " kW"}
+            />
+            {r.potenciaEletrica !== null && (
+              <Indicador
+                rotulo="Potência elétrica"
+                valor={fmt(r.potenciaEletrica / 1000, 2)}
+                unidade="kW"
+                nota={r.custoMensal !== null ? "Custo mensal: R$ " + fmt(r.custoMensal, 2) : undefined}
+              />
+            )}
+            {r.npsh !== null && (
+              <Indicador
+                rotulo="NPSH disponível (base)"
+                valor={fmt(r.npsh.npshDisponivel, 2)}
+                unidade="m"
+                nota={"Requerido " + fmt(r.npsh.npshRequerido, 2) + " m. " + textoClasse(r.npsh.classe)}
+                corValor={corClasse(r.npsh.classe)}
+              />
+            )}
+            {r.npshAdicional !== null && (
+              <Indicador
+                rotulo="NPSH disponível (adicional)"
+                valor={fmt(r.npshAdicional.npshDisponivel, 2)}
+                unidade="m"
+                nota={"Requerido " + fmt(r.npshAdicional.npshRequerido, 2) + " m. " + textoClasse(r.npshAdicional.classe)}
+                corValor={corClasse(r.npshAdicional.classe)}
+              />
+            )}
+          </Grade>
+        </div>
+      )}
+
+      <Card titulo="Módulos">
+        <Tabela
+          linhas={[
+            { rotulo: "Novo Projeto", valor: "Disponível" },
+            { rotulo: "Análise Hidráulica", valor: "Disponível" },
+            { rotulo: "Cavitação", valor: "Em desenvolvimento", cor: cor.apagado },
+            { rotulo: "Resultados", valor: "Em desenvolvimento", cor: cor.apagado },
+            { rotulo: "Memória de Cálculo", valor: "Em desenvolvimento", cor: cor.apagado },
+            { rotulo: "Relatórios", valor: "Em desenvolvimento", cor: cor.apagado },
+          ]}
+        />
+        <div style={{ display: "flex", gap: "20px", marginTop: "16px", fontSize: "14px" }}>
+          <Link href="/novo-projeto" style={{ color: cor.azulClaro }}>
+            Abrir Novo Projeto
+          </Link>
+          <Link href="/analise-hidraulica" style={{ color: cor.azulClaro }}>
+            Abrir Análise Hidráulica
+          </Link>
+        </div>
+      </Card>
+    </Pagina>
   );
 }
