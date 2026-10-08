@@ -53,7 +53,7 @@ function FormLinha(props: {
             aoMudar({ ...linha, modoAtrito: v === "calcular" ? "calcular" : "informado" })
           }
           opcoes={[
-            { valor: "informado", rotulo: "Informado no enunciado" },
+            { valor: "informado", rotulo: "Informar f manualmente" },
             { valor: "calcular", rotulo: "Calcular (Swamee-Jain)" },
           ]}
         />
@@ -124,7 +124,7 @@ export default function NovoProjetoPage() {
   return (
     <Pagina
       titulo="Novo Projeto"
-      subtitulo="Informe os dados do enunciado no Sistema Internacional. Campos marcados com * são obrigatórios. Os dados ficam apenas nesta aba do navegador."
+      subtitulo="Informe os dados do sistema no Sistema Internacional. Campos marcados com * são obrigatórios. Os dados ficam apenas nesta aba do navegador."
     >
       <Card titulo="Identificação">
         <Grade minimo={320}>
@@ -211,7 +211,7 @@ export default function NovoProjetoPage() {
               }))
             }
             opcoes={[
-              { valor: "manual", rotulo: "Dados informados no enunciado" },
+              { valor: "manual", rotulo: "Informar valores manualmente" },
               { valor: "agua", rotulo: "Água (propriedades pela temperatura)" },
             ]}
           />
@@ -324,7 +324,7 @@ export default function NovoProjetoPage() {
               rotulo="Pressão atmosférica local (Pa)"
               valor={projeto.pressaoAtm}
               aoMudar={(v) => atualizar((p) => ({ ...p, pressaoAtm: v }))}
-              ajuda="Usada só para converter em absoluta no NPSH."
+              ajuda="Usada só para converter em absoluta na verificação de cavitação."
             />
           )}
           <Campo
@@ -339,7 +339,7 @@ export default function NovoProjetoPage() {
             valor={projeto.cotaDestino}
             aoMudar={(v) => atualizar((p) => ({ ...p, cotaDestino: v }))}
             placeholder="Ex.: 18"
-            ajuda="Se o enunciado só dá o desnível, use z1 = 0 e z2 = desnível."
+            ajuda="Se só houver o desnível, use z1 = 0 e z2 = desnível."
             obrigatorio
           />
         </Grade>
@@ -347,7 +347,7 @@ export default function NovoProjetoPage() {
 
       <Card
         titulo="Linhas de tubulação"
-        descricao="Marque quando o enunciado separar sucção e recalque. Sem a marcação, use uma única tubulação."
+        descricao="Marque quando o sistema tiver sucção e recalque separados. Sem a marcação, use uma única tubulação."
       >
         <label style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "14px" }}>
           <input
@@ -355,7 +355,7 @@ export default function NovoProjetoPage() {
             checked={projeto.usarSuccao}
             onChange={(ev) => atualizar((p) => ({ ...p, usarSuccao: ev.target.checked }))}
           />
-          O enunciado tem linha de sucção e linha de recalque separadas
+          O sistema tem linha de sucção e linha de recalque separadas
         </label>
       </Card>
 
@@ -419,15 +419,16 @@ export default function NovoProjetoPage() {
       </Card>
 
       <Card
-        titulo="Bomba e energia"
-        descricao="O rendimento da bomba é obrigatório, em fração (0,72 e não 72). Os demais campos são opcionais e liberam potência elétrica e custo."
+        titulo="Bomba e motor"
+        descricao="O rendimento da bomba é obrigatório, em fração (0,72 e não 72). O rendimento do motor é opcional e libera a potência elétrica."
       >
         <Grade>
           <Campo
-            rotulo="Rendimento da bomba η (fração)"
+            rotulo="Rendimento da bomba ou do conjunto motor-bomba η (fração)"
             valor={projeto.rendBomba}
             aoMudar={(v) => atualizar((p) => ({ ...p, rendBomba: v }))}
             placeholder="Ex.: 0,72"
+            ajuda="Se o dado for do conjunto motor-bomba, informe-o aqui e deixe o motor vazio."
             obrigatorio
           />
           <Campo
@@ -435,7 +436,16 @@ export default function NovoProjetoPage() {
             valor={projeto.rendMotor}
             aoMudar={(v) => atualizar((p) => ({ ...p, rendMotor: v }))}
             placeholder="Ex.: 0,9"
+            ajuda="Preencha se for necessária a potência elétrica."
           />
+        </Grade>
+      </Card>
+
+      <Card
+        titulo="Custo de energia (opcional)"
+        descricao="Preencha somente se for necessário calcular o consumo mensal e o custo."
+      >
+        <Grade>
           <Campo
             rotulo="Operação (h/dia)"
             valor={projeto.horasDia}
@@ -456,30 +466,30 @@ export default function NovoProjetoPage() {
           />
         </Grade>
         <p style={{ color: cor.apagado, fontSize: "12px", margin: "12px 0 0 0" }}>
-          Horas, dias e tarifa seguem a unidade de faturamento do enunciado (h, dia, kWh).
+          Unidades de faturamento: horas por dia, dias por mês e reais por kWh.
         </p>
       </Card>
 
       <Card
-        titulo="Cavitação (NPSH)"
-        descricao="Opcional. Só é calculado com linha de sucção. Para a verificação, informe a pressão de vapor e o NPSH requerido do fabricante."
+        titulo="Cavitação (pressão na entrada da bomba)"
+        descricao="Opcional. Só é calculado com linha de sucção. Informe a pressão de vapor do fluido e a pressão exigida pela bomba na entrada (NPSH requerido, dado do fabricante)."
       >
         <Grade>
           <Campo
-            rotulo="Pressão de vapor Pv, absoluta (Pa)"
+            rotulo="Pressão de vapor do fluido, absoluta (Pa)"
             valor={projeto.pressaoVapor}
             aoMudar={(v) => atualizar((p) => ({ ...p, pressaoVapor: v }))}
             placeholder="Ex.: 47400"
             ajuda="47,4 kPa = 47400 Pa"
           />
           <Campo
-            rotulo="NPSH requerido (m)"
+            rotulo="Pressão exigida pela bomba na entrada, NPSH requerido (m)"
             valor={projeto.npshRequerido}
             aoMudar={(v) => atualizar((p) => ({ ...p, npshRequerido: v }))}
             placeholder="Ex.: 4,6"
           />
           <Campo
-            rotulo="Razão mínima segura NPSHA/NPSHR"
+            rotulo="Fator de segurança mínimo (disponível ÷ exigida)"
             valor={projeto.razaoSegura}
             aoMudar={(v) => atualizar((p) => ({ ...p, razaoSegura: v }))}
             ajuda="Premissa editável. Use o critério definido pelo professor."
