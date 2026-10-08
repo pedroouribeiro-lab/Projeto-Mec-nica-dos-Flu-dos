@@ -15,9 +15,8 @@ import {
 import { useProjeto } from "../../components/ProjetoContext";
 import {
   MAX_MEMBROS,
-  acessorioVazio,
+  avaliarExpressao,
   calcularProjeto,
-  somarK,
   type Linha,
 } from "../../lib/hidraulica";
 
@@ -28,129 +27,79 @@ function FormLinha(props: {
   aoMudar: (linha: Linha) => void;
 }) {
   const { linha, aoMudar } = props;
-  const soma = somarK(linha.acessorios);
-
-  function mudarAcessorio(id: string, campo: "nome" | "qtd" | "k", valor: string) {
-    aoMudar({
-      ...linha,
-      acessorios: linha.acessorios.map((a) =>
-        a.id === id ? { ...a, [campo]: valor } : a
-      ),
-    });
-  }
-
-  function removerAcessorio(id: string) {
-    const restantes = linha.acessorios.filter((a) => a.id !== id);
-    aoMudar({
-      ...linha,
-      acessorios: restantes.length > 0 ? restantes : [acessorioVazio()],
-    });
-  }
-
-  function adicionarAcessorio() {
-    aoMudar({ ...linha, acessorios: [...linha.acessorios, acessorioVazio()] });
-  }
+  const somaK = avaliarExpressao(linha.somaK);
 
   return (
     <Card titulo={props.titulo} descricao={props.descricao}>
       <Grade>
         <Campo
-          rotulo="Diâmetro interno (mm)"
+          rotulo="Diâmetro interno D (m)"
           valor={linha.diametro}
           aoMudar={(v) => aoMudar({ ...linha, diametro: v })}
-          placeholder="Ex.: 100"
+          placeholder="Ex.: 0,08"
+          obrigatorio
         />
         <Campo
-          rotulo="Comprimento (m)"
+          rotulo="Comprimento L (m)"
           valor={linha.comprimento}
           aoMudar={(v) => aoMudar({ ...linha, comprimento: v })}
-          placeholder="Ex.: 50"
+          placeholder="Ex.: 65"
+          obrigatorio
         />
         <Selecao
-          rotulo="Fator de atrito"
+          rotulo="Fator de atrito f"
           valor={linha.modoAtrito}
           aoMudar={(v) =>
-            aoMudar({ ...linha, modoAtrito: v === "informado" ? "informado" : "calcular" })
+            aoMudar({ ...linha, modoAtrito: v === "calcular" ? "calcular" : "informado" })
           }
           opcoes={[
-            { valor: "calcular", rotulo: "Calcular (Swamee-Jain)" },
             { valor: "informado", rotulo: "Informado no enunciado" },
+            { valor: "calcular", rotulo: "Calcular (Swamee-Jain)" },
           ]}
         />
-        {linha.modoAtrito === "calcular" ? (
+        {linha.modoAtrito === "informado" ? (
           <Campo
-            rotulo="Rugosidade absoluta (mm)"
-            valor={linha.rugosidade}
-            aoMudar={(v) => aoMudar({ ...linha, rugosidade: v })}
-            placeholder="Ex.: 0,045"
-          />
-        ) : (
-          <Campo
-            rotulo="Fator de atrito de Darcy (f)"
+            rotulo="Fator de atrito de Darcy f"
             valor={linha.fatorAtrito}
             aoMudar={(v) => aoMudar({ ...linha, fatorAtrito: v })}
             placeholder="Ex.: 0,022"
+            obrigatorio
+          />
+        ) : (
+          <Campo
+            rotulo="Rugosidade absoluta ε (m)"
+            valor={linha.rugosidade}
+            aoMudar={(v) => aoMudar({ ...linha, rugosidade: v })}
+            placeholder="Ex.: 0,000045"
+            ajuda="0,045 mm = 0,000045 m (também aceita 4,5e-5)"
+            obrigatorio
           />
         )}
+        <Campo
+          rotulo="Soma dos coeficientes K (ΣK)"
+          valor={linha.somaK}
+          aoMudar={(v) => aoMudar({ ...linha, somaK: v })}
+          placeholder="Ex.: 0,5+4*0,9+1"
+          decimal={false}
+          obrigatorio
+          ajuda={
+            isNaN(somaK)
+              ? "Digite o valor ou a soma, como na prova: 0,5+1,4+0,3"
+              : "ΣK = " + fmt(somaK, 2)
+          }
+        />
       </Grade>
-
-      <h3 style={{ fontSize: "14px", fontWeight: 600, margin: "24px 0 4px 0" }}>
-        Acessórios e singularidades
-      </h3>
-      <p style={{ color: cor.suave, fontSize: "13px", margin: "0 0 12px 0" }}>
-        Linhas em branco são ignoradas. O total é a soma de quantidade × K.
-      </p>
-
-      {linha.acessorios.map((a) => (
-        <div
-          key={a.id}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(160px, 3fr) 90px 90px auto",
-            gap: "10px",
-            marginBottom: "10px",
-            alignItems: "end",
-          }}
-        >
-          <Campo
-            rotulo="Acessório"
-            valor={a.nome}
-            aoMudar={(v) => mudarAcessorio(a.id, "nome", v)}
-            placeholder="Ex.: Cotovelo 90°"
-            decimal={false}
-          />
-          <Campo
-            rotulo="Qtd."
-            valor={a.qtd}
-            aoMudar={(v) => mudarAcessorio(a.id, "qtd", v)}
-            placeholder="1"
-          />
-          <Campo
-            rotulo="K"
-            valor={a.k}
-            aoMudar={(v) => mudarAcessorio(a.id, "k", v)}
-            placeholder="0,9"
-          />
-          <Botao aoClicar={() => removerAcessorio(a.id)}>Remover</Botao>
-        </div>
-      ))}
-
-      <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "14px" }}>
-        <Botao aoClicar={adicionarAcessorio}>Adicionar acessório</Botao>
-        <span style={{ color: cor.suave, fontSize: "14px" }}>
-          ΣK ={" "}
-          <strong style={{ color: cor.azulClaro }}>
-            {soma.erro === null ? fmt(soma.soma, 2) : "verifique os valores"}
-          </strong>
-        </span>
-      </div>
     </Card>
   );
 }
 
 export default function NovoProjetoPage() {
-  const { projeto, atualizar, carregarExemplo, limpar } = useProjeto();
+  const { projeto, atualizar, limpar } = useProjeto();
   const resposta = calcularProjeto(projeto);
+
+  const precisaViscosidade =
+    projeto.recalque.modoAtrito === "calcular" ||
+    (projeto.usarSuccao && projeto.succao.modoAtrito === "calcular");
 
   function mudarMembro(indice: number, valor: string) {
     atualizar((p) => ({
@@ -175,27 +124,21 @@ export default function NovoProjetoPage() {
   return (
     <Pagina
       titulo="Novo Projeto"
-      subtitulo="Informe os dados do enunciado. Tudo é salvo automaticamente neste navegador."
+      subtitulo="Informe os dados do enunciado no Sistema Internacional. Campos marcados com * são obrigatórios. Os dados ficam apenas nesta aba do navegador."
     >
-      <Card
-        titulo="Identificação"
-        descricao="Para testar o site, carregue um dos exemplos. Eles substituem os dados atuais."
-      >
+      <Card titulo="Identificação">
         <Grade minimo={320}>
           <Campo
             rotulo="Nome do projeto"
             valor={projeto.nome}
             aoMudar={(v) => atualizar((p) => ({ ...p, nome: v }))}
-            placeholder="Ex.: Circuito de água quente"
+            placeholder="Ex.: Sistema de bombeamento do laboratório"
             decimal={false}
           />
         </Grade>
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "18px" }}>
-          <Botao aoClicar={() => carregarExemplo("ex1")}>Carregar Exercício 1</Botao>
-          <Botao aoClicar={() => carregarExemplo("ex2")}>Carregar Exercício 2</Botao>
-          <Botao aoClicar={() => carregarExemplo("desafio2")}>Carregar Desafio 02</Botao>
+        <div style={{ marginTop: "18px" }}>
           <Botao variante="perigo" aoClicar={limpar}>
-            Limpar tudo
+            Limpar todos os dados
           </Botao>
         </div>
       </Card>
@@ -239,51 +182,37 @@ export default function NovoProjetoPage() {
         </div>
       </Card>
 
-      <Card titulo="Vazão e gravidade">
+      <Card
+        titulo="Vazão, gravidade e fluido"
+        descricao="Use somente números, sem separador de milhar (exemplo: 101300). Vírgula ou ponto como decimal."
+      >
         <Grade>
           <Campo
-            rotulo="Vazão"
+            rotulo="Vazão Q (m³/s)"
             valor={projeto.vazao}
             aoMudar={(v) => atualizar((p) => ({ ...p, vazao: v }))}
-            placeholder="Ex.: 36"
-          />
-          <Selecao
-            rotulo="Unidade da vazão"
-            valor={projeto.unidadeVazao}
-            aoMudar={(v) =>
-              atualizar((p) => ({
-                ...p,
-                unidadeVazao: v === "ls" ? "ls" : v === "m3s" ? "m3s" : "m3h",
-              }))
-            }
-            opcoes={[
-              { valor: "m3h", rotulo: "m³/h" },
-              { valor: "ls", rotulo: "L/s" },
-              { valor: "m3s", rotulo: "m³/s" },
-            ]}
+            placeholder="Ex.: 0,012"
+            ajuda="12 L/s = 0,012 m³/s"
+            obrigatorio
           />
           <Campo
-            rotulo="Gravidade (m/s²)"
+            rotulo="Gravidade g (m/s²)"
             valor={projeto.gravidade}
             aoMudar={(v) => atualizar((p) => ({ ...p, gravidade: v }))}
+            obrigatorio
           />
-        </Grade>
-      </Card>
-
-      <Card titulo="Fluido">
-        <Grade>
           <Selecao
-            rotulo="Tipo de fluido"
+            rotulo="Fluido"
             valor={projeto.fluido.tipo}
             aoMudar={(v) =>
               atualizar((p) => ({
                 ...p,
-                fluido: { ...p.fluido, tipo: v === "manual" ? "manual" : "agua" },
+                fluido: { ...p.fluido, tipo: v === "agua" ? "agua" : "manual" },
               }))
             }
             opcoes={[
-              { valor: "agua", rotulo: "Água (propriedades pela temperatura)" },
               { valor: "manual", rotulo: "Dados informados no enunciado" },
+              { valor: "agua", rotulo: "Água (propriedades pela temperatura)" },
             ]}
           />
           {projeto.fluido.tipo === "agua" ? (
@@ -294,6 +223,7 @@ export default function NovoProjetoPage() {
                 atualizar((p) => ({ ...p, fluido: { ...p.fluido, temperatura: v } }))
               }
               placeholder="Ex.: 20"
+              obrigatorio
             />
           ) : (
             <>
@@ -303,16 +233,17 @@ export default function NovoProjetoPage() {
                 aoMudar={(v) =>
                   atualizar((p) => ({ ...p, fluido: { ...p.fluido, nome: v } }))
                 }
-                placeholder="Ex.: Água quente a 80 °C"
+                placeholder="Ex.: Água"
                 decimal={false}
               />
               <Campo
-                rotulo="Massa específica (kg/m³)"
+                rotulo="Massa específica ρ (kg/m³)"
                 valor={projeto.fluido.densidade}
                 aoMudar={(v) =>
                   atualizar((p) => ({ ...p, fluido: { ...p.fluido, densidade: v } }))
                 }
                 placeholder="Ex.: 1000"
+                obrigatorio
               />
               <Selecao
                 rotulo="Viscosidade informada"
@@ -322,27 +253,32 @@ export default function NovoProjetoPage() {
                     ...p,
                     fluido: {
                       ...p.fluido,
-                      tipoViscosidade: v === "cinematica" ? "cinematica" : "dinamica",
+                      tipoViscosidade: v === "dinamica" ? "dinamica" : "cinematica",
                     },
                   }))
                 }
                 opcoes={[
-                  { valor: "dinamica", rotulo: "Dinâmica μ (mPa·s = cP)" },
-                  { valor: "cinematica", rotulo: "Cinemática ν (mm²/s)" },
+                  { valor: "cinematica", rotulo: "Cinemática ν (m²/s)" },
+                  { valor: "dinamica", rotulo: "Dinâmica μ (Pa·s)" },
                 ]}
               />
               <Campo
                 rotulo={
                   projeto.fluido.tipoViscosidade === "dinamica"
-                    ? "Viscosidade dinâmica (mPa·s)"
-                    : "Viscosidade cinemática (mm²/s)"
+                    ? "Viscosidade dinâmica μ (Pa·s)"
+                    : "Viscosidade cinemática ν (m²/s)"
                 }
                 valor={projeto.fluido.viscosidade}
                 aoMudar={(v) =>
                   atualizar((p) => ({ ...p, fluido: { ...p.fluido, viscosidade: v } }))
                 }
-                placeholder="Obrigatória para calcular f e Reynolds"
-                ajuda="1 Pa·s = 1000 mPa·s. 1 m²/s = 1.000.000 mm²/s."
+                placeholder="Ex.: 0,000001"
+                ajuda={
+                  precisaViscosidade
+                    ? "Obrigatória porque o fator de atrito será calculado."
+                    : "Opcional: só é usada para Reynolds e para calcular f."
+                }
+                obrigatorio={precisaViscosidade}
               />
             </>
           )}
@@ -351,20 +287,23 @@ export default function NovoProjetoPage() {
 
       <Card
         titulo="Condições do sistema"
-        descricao="Cotas referidas ao eixo da bomba. As velocidades nas superfícies dos reservatórios são consideradas desprezíveis."
+        descricao="Cotas referidas ao eixo da bomba. Reservatório aberto: pressão manométrica 0. A velocidade na superfície de origem é desprezada."
       >
         <Grade>
           <Campo
-            rotulo="Pressão na superfície de origem (kPa)"
+            rotulo="Pressão na origem P1 (Pa)"
             valor={projeto.pressaoOrigem}
             aoMudar={(v) => atualizar((p) => ({ ...p, pressaoOrigem: v }))}
-            placeholder="Ex.: 101,3"
+            placeholder="Ex.: 150000"
+            ajuda="150 kPa = 150000 Pa"
+            obrigatorio
           />
           <Campo
-            rotulo="Pressão na superfície de destino (kPa)"
+            rotulo="Pressão no destino P2 (Pa)"
             valor={projeto.pressaoDestino}
             aoMudar={(v) => atualizar((p) => ({ ...p, pressaoDestino: v }))}
-            placeholder="Ex.: 101,3"
+            placeholder="Ex.: 350000"
+            obrigatorio
           />
           <Selecao
             rotulo="As pressões informadas são"
@@ -382,33 +321,33 @@ export default function NovoProjetoPage() {
           />
           {projeto.tipoPressao === "manometrica" && (
             <Campo
-              rotulo="Pressão atmosférica local (kPa)"
+              rotulo="Pressão atmosférica local (Pa)"
               valor={projeto.pressaoAtm}
               aoMudar={(v) => atualizar((p) => ({ ...p, pressaoAtm: v }))}
               ajuda="Usada só para converter em absoluta no NPSH."
             />
           )}
           <Campo
-            rotulo="Cota da superfície de origem (m)"
+            rotulo="Cota da origem z1 (m)"
             valor={projeto.cotaOrigem}
             aoMudar={(v) => atualizar((p) => ({ ...p, cotaOrigem: v }))}
-            placeholder="Ex.: 1,5"
+            placeholder="Ex.: 0"
+            obrigatorio
           />
           <Campo
-            rotulo="Cota da superfície de destino (m)"
+            rotulo="Cota do destino z2 (m)"
             valor={projeto.cotaDestino}
             aoMudar={(v) => atualizar((p) => ({ ...p, cotaDestino: v }))}
-            placeholder="Ex.: 30"
+            placeholder="Ex.: 18"
+            ajuda="Se o enunciado só dá o desnível, use z1 = 0 e z2 = desnível."
+            obrigatorio
           />
         </Grade>
-        <p style={{ color: cor.apagado, fontSize: "12px", margin: "12px 0 0 0" }}>
-          Se o enunciado só informa o desnível, use cota de origem 0 e cota de destino igual ao desnível.
-        </p>
       </Card>
 
       <Card
         titulo="Linhas de tubulação"
-        descricao="Marque a opção abaixo quando o enunciado separar sucção e recalque (necessário para o NPSH)."
+        descricao="Marque quando o enunciado separar sucção e recalque. Sem a marcação, use uma única tubulação."
       >
         <label style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "14px" }}>
           <input
@@ -433,29 +372,69 @@ export default function NovoProjetoPage() {
         titulo={projeto.usarSuccao ? "Linha de recalque" : "Tubulação"}
         descricao={
           projeto.usarSuccao
-            ? "Trecho da saída da bomba até o reservatório de destino."
-            : "Tubulação única entre os dois reservatórios."
+            ? "Trecho da saída da bomba até o destino."
+            : "Tubulação única entre a origem e o destino."
         }
         linha={projeto.recalque}
         aoMudar={(l) => atualizar((p) => ({ ...p, recalque: l }))}
       />
 
       <Card
+        titulo="Bocal (saída em jato)"
+        descricao="Use quando a água sai por um bocal para o ar. A energia cinética na saída entra na altura manométrica."
+      >
+        <label style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "14px", marginBottom: "14px" }}>
+          <input
+            type="checkbox"
+            checked={projeto.bocal.ativo}
+            onChange={(ev) =>
+              atualizar((p) => ({ ...p, bocal: { ...p.bocal, ativo: ev.target.checked } }))
+            }
+          />
+          O sistema termina em um bocal
+        </label>
+        {projeto.bocal.ativo && (
+          <Grade>
+            <Campo
+              rotulo="Diâmetro de saída do bocal (m)"
+              valor={projeto.bocal.diametro}
+              aoMudar={(v) =>
+                atualizar((p) => ({ ...p, bocal: { ...p.bocal, diametro: v } }))
+              }
+              placeholder="Ex.: 0,05"
+              obrigatorio
+            />
+            <Campo
+              rotulo="K do bocal (opcional)"
+              valor={projeto.bocal.k}
+              aoMudar={(v) =>
+                atualizar((p) => ({ ...p, bocal: { ...p.bocal, k: v } }))
+              }
+              placeholder="Ex.: 0,8"
+              ajuda="Referido à velocidade no bocal."
+              decimal={false}
+            />
+          </Grade>
+        )}
+      </Card>
+
+      <Card
         titulo="Bomba e energia"
-        descricao="O rendimento da bomba é obrigatório. Os demais campos são opcionais e liberam potência elétrica e custo."
+        descricao="O rendimento da bomba é obrigatório, em fração (0,72 e não 72). Os demais campos são opcionais e liberam potência elétrica e custo."
       >
         <Grade>
           <Campo
-            rotulo="Rendimento da bomba (%)"
+            rotulo="Rendimento da bomba η (fração)"
             valor={projeto.rendBomba}
             aoMudar={(v) => atualizar((p) => ({ ...p, rendBomba: v }))}
-            placeholder="Ex.: 70"
+            placeholder="Ex.: 0,72"
+            obrigatorio
           />
           <Campo
-            rotulo="Rendimento do motor (%)"
+            rotulo="Rendimento do motor (fração)"
             valor={projeto.rendMotor}
             aoMudar={(v) => atualizar((p) => ({ ...p, rendMotor: v }))}
-            placeholder="Ex.: 90"
+            placeholder="Ex.: 0,9"
           />
           <Campo
             rotulo="Operação (h/dia)"
@@ -476,18 +455,22 @@ export default function NovoProjetoPage() {
             placeholder="Ex.: 0,92"
           />
         </Grade>
+        <p style={{ color: cor.apagado, fontSize: "12px", margin: "12px 0 0 0" }}>
+          Horas, dias e tarifa seguem a unidade de faturamento do enunciado (h, dia, kWh).
+        </p>
       </Card>
 
       <Card
         titulo="Cavitação (NPSH)"
-        descricao="Só é calculado com linha de sucção. Informe a pressão de vapor e o NPSH requerido do fabricante."
+        descricao="Opcional. Só é calculado com linha de sucção. Para a verificação, informe a pressão de vapor e o NPSH requerido do fabricante."
       >
         <Grade>
           <Campo
-            rotulo="Pressão de vapor do fluido (kPa abs)"
+            rotulo="Pressão de vapor Pv, absoluta (Pa)"
             valor={projeto.pressaoVapor}
             aoMudar={(v) => atualizar((p) => ({ ...p, pressaoVapor: v }))}
-            placeholder="Ex.: 47,4"
+            placeholder="Ex.: 47400"
+            ajuda="47,4 kPa = 47400 Pa"
           />
           <Campo
             rotulo="NPSH requerido (m)"
@@ -502,11 +485,11 @@ export default function NovoProjetoPage() {
             ajuda="Premissa editável. Use o critério definido pelo professor."
           />
           <Campo
-            rotulo="Condição adicional: cota de origem (m)"
+            rotulo="Condição adicional: cota da origem (m)"
             valor={projeto.cotaOrigemAdicional}
             aoMudar={(v) => atualizar((p) => ({ ...p, cotaOrigemAdicional: v }))}
-            placeholder="Ex.: 0,3 (opcional)"
-            ajuda="Nível do tanque de sucção na condição adicional."
+            placeholder="Ex.: 0,3"
+            ajuda="Nível do tanque de sucção na condição adicional (opcional)."
           />
         </Grade>
       </Card>
@@ -520,7 +503,7 @@ export default function NovoProjetoPage() {
         </Aviso>
       ) : (
         <Aviso tipo="alerta">
-          <strong>Pendências para calcular:</strong>
+          <strong>Campos obrigatórios pendentes:</strong>
           <ul style={{ margin: "8px 0 0 0", paddingLeft: "20px" }}>
             {resposta.erros.map((e) => (
               <li key={e}>{e}</li>
