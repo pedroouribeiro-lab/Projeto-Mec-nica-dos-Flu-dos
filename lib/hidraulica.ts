@@ -1,24 +1,24 @@
 // HydroCalc Pro - motor de cálculo hidráulico
-// Todas as funções são puras: recebem os dados digitados (texto) e devolvem números.
+// Todas as entradas são digitadas no Sistema Internacional (m, m³/s, Pa, kg/m³, Pa·s, m²/s).
+// As funções são puras: recebem os dados digitados (texto) e devolvem números.
 
 // ---------------------------------------------------------------------------
 // Tipos dos dados de entrada (campos guardados como texto para aceitar vírgula)
 // ---------------------------------------------------------------------------
 
-export type Acessorio = {
-  id: string;
-  nome: string;
-  qtd: string;
-  k: string;
-};
-
 export type Linha = {
-  diametro: string; // mm
+  diametro: string; // m
   comprimento: string; // m
-  rugosidade: string; // mm
+  rugosidade: string; // m (usada quando o fator de atrito é calculado)
   modoAtrito: "calcular" | "informado";
   fatorAtrito: string; // usado quando modoAtrito = "informado"
-  acessorios: Acessorio[];
+  somaK: string; // soma dos K; aceita expressão, ex.: 0,5+4*0,9+1
+};
+
+export type Bocal = {
+  ativo: boolean;
+  diametro: string; // m
+  k: string; // K do bocal, referido à velocidade no bocal (opcional)
 };
 
 export type Fluido = {
@@ -27,31 +27,31 @@ export type Fluido = {
   nome: string;
   densidade: string; // kg/m³ (manual)
   tipoViscosidade: "dinamica" | "cinematica";
-  viscosidade: string; // mPa·s (dinâmica) ou mm²/s (cinemática)
+  viscosidade: string; // Pa·s (dinâmica) ou m²/s (cinemática)
 };
 
 export type Projeto = {
   nome: string;
   membros: string[];
   gravidade: string; // m/s²
-  vazao: string;
-  unidadeVazao: "m3h" | "ls" | "m3s";
+  vazao: string; // m³/s
   fluido: Fluido;
   usarSuccao: boolean;
   succao: Linha;
   recalque: Linha; // quando não há linha de sucção, é a tubulação principal
-  pressaoOrigem: string; // kPa
-  pressaoDestino: string; // kPa
+  bocal: Bocal;
+  pressaoOrigem: string; // Pa
+  pressaoDestino: string; // Pa
   tipoPressao: "absoluta" | "manometrica";
-  pressaoAtm: string; // kPa (usada para converter manométrica em absoluta no NPSH)
+  pressaoAtm: string; // Pa (usada para converter manométrica em absoluta no NPSH)
   cotaOrigem: string; // m, referida ao eixo da bomba
   cotaDestino: string; // m
-  rendBomba: string; // %
-  rendMotor: string; // % (opcional)
+  rendBomba: string; // fração entre 0 e 1
+  rendMotor: string; // fração entre 0 e 1 (opcional)
   horasDia: string; // h/dia (opcional)
   diasMes: string; // dias/mês (opcional)
   tarifa: string; // R$/kWh (opcional)
-  pressaoVapor: string; // kPa absoluta (opcional, para NPSH)
+  pressaoVapor: string; // Pa absoluta (opcional, para NPSH)
   npshRequerido: string; // m (opcional, para NPSH)
   razaoSegura: string; // razão mínima NPSHA/NPSHR considerada segura
   cotaOrigemAdicional: string; // m (opcional, condição adicional)
@@ -59,24 +59,14 @@ export type Projeto = {
 
 export const MAX_MEMBROS = 6;
 
-let contador = 0;
-export function novoId(): string {
-  contador = contador + 1;
-  return "a" + Date.now().toString(36) + contador;
-}
-
-export function acessorioVazio(): Acessorio {
-  return { id: novoId(), nome: "", qtd: "", k: "" };
-}
-
 export function linhaVazia(): Linha {
   return {
     diametro: "",
     comprimento: "",
     rugosidade: "",
-    modoAtrito: "calcular",
+    modoAtrito: "informado",
     fatorAtrito: "",
-    acessorios: [acessorioVazio()],
+    somaK: "",
   };
 }
 
@@ -86,22 +76,22 @@ export function projetoVazio(): Projeto {
     membros: [""],
     gravidade: "9,81",
     vazao: "",
-    unidadeVazao: "m3h",
     fluido: {
-      tipo: "agua",
-      temperatura: "20",
+      tipo: "manual",
+      temperatura: "",
       nome: "",
       densidade: "",
-      tipoViscosidade: "dinamica",
+      tipoViscosidade: "cinematica",
       viscosidade: "",
     },
     usarSuccao: false,
     succao: linhaVazia(),
     recalque: linhaVazia(),
+    bocal: { ativo: false, diametro: "", k: "" },
     pressaoOrigem: "",
     pressaoDestino: "",
     tipoPressao: "manometrica",
-    pressaoAtm: "101,325",
+    pressaoAtm: "101325",
     cotaOrigem: "",
     cotaDestino: "",
     rendBomba: "",
@@ -113,148 +103,6 @@ export function projetoVazio(): Projeto {
     npshRequerido: "",
     razaoSegura: "1,3",
     cotaOrigemAdicional: "",
-  };
-}
-
-function acc(nome: string, qtd: string, k: string): Acessorio {
-  return { id: novoId(), nome: nome, qtd: qtd, k: k };
-}
-
-// ---------------------------------------------------------------------------
-// Exemplos (dados dos exercícios do material de aula e do Desafio 02)
-// ---------------------------------------------------------------------------
-
-export type IdExemplo = "ex1" | "ex2" | "desafio2";
-
-export function exemplo(id: IdExemplo): Projeto {
-  const base = projetoVazio();
-
-  if (id === "ex1") {
-    return {
-      ...base,
-      nome: "Exercício 1 - Reservatórios abertos",
-      vazao: "12",
-      unidadeVazao: "ls",
-      fluido: {
-        ...base.fluido,
-        tipo: "manual",
-        nome: "Água",
-        densidade: "1000",
-      },
-      recalque: {
-        diametro: "80",
-        comprimento: "65",
-        rugosidade: "",
-        modoAtrito: "informado",
-        fatorAtrito: "0,022",
-        acessorios: [
-          acc("Entrada da tubulação", "1", "0,5"),
-          acc("Cotovelo de 90°", "4", "0,9"),
-          acc("Válvula gaveta totalmente aberta", "1", "0,15"),
-          acc("Válvula de retenção", "1", "2"),
-          acc("Saída para o reservatório", "1", "1"),
-        ],
-      },
-      pressaoOrigem: "0",
-      pressaoDestino: "0",
-      tipoPressao: "manometrica",
-      cotaOrigem: "0",
-      cotaDestino: "18",
-      rendBomba: "75",
-    };
-  }
-
-  if (id === "ex2") {
-    return {
-      ...base,
-      nome: "Exercício 2 - Tanques pressurizados",
-      vazao: "18",
-      unidadeVazao: "ls",
-      fluido: {
-        ...base.fluido,
-        tipo: "manual",
-        nome: "Água",
-        densidade: "1000",
-        tipoViscosidade: "cinematica",
-        viscosidade: "1",
-      },
-      recalque: {
-        diametro: "100",
-        comprimento: "120",
-        rugosidade: "0,045",
-        modoAtrito: "calcular",
-        fatorAtrito: "",
-        acessorios: [
-          acc("Entrada", "1", "0,5"),
-          acc("Cotovelo de 90°", "6", "0,9"),
-          acc("Válvula globo totalmente aberta", "1", "10"),
-          acc("Válvula de retenção", "1", "2"),
-          acc("Saída", "1", "1"),
-        ],
-      },
-      pressaoOrigem: "150",
-      pressaoDestino: "350",
-      tipoPressao: "manometrica",
-      cotaOrigem: "0",
-      cotaDestino: "12",
-      rendBomba: "72",
-    };
-  }
-
-  return {
-    ...base,
-    nome: "Desafio 02 - Circuito de água quente",
-    vazao: "36",
-    unidadeVazao: "m3h",
-    fluido: {
-      ...base.fluido,
-      tipo: "manual",
-      nome: "Água quente a 80 °C",
-      densidade: "971,8",
-      tipoViscosidade: "dinamica",
-      viscosidade: "0,355",
-    },
-    usarSuccao: true,
-    succao: {
-      diametro: "75",
-      comprimento: "12",
-      rugosidade: "0,045",
-      modoAtrito: "calcular",
-      fatorAtrito: "",
-      acessorios: [
-        acc("Entrada no tubo", "1", "0,5"),
-        acc("Cotovelo 90°", "1", "0,9"),
-        acc("Válvula gaveta totalmente aberta", "1", "0,15"),
-        acc("Filtro/strainer limpo", "1", "2"),
-      ],
-    },
-    recalque: {
-      diametro: "65",
-      comprimento: "80",
-      rugosidade: "0,045",
-      modoAtrito: "calcular",
-      fatorAtrito: "",
-      acessorios: [
-        acc("Cotovelo 90°", "5", "0,9"),
-        acc("Válvula gaveta totalmente aberta", "1", "0,15"),
-        acc("Válvula de retenção", "1", "2"),
-        acc("Saída para reservatório", "1", "1"),
-      ],
-    },
-    pressaoOrigem: "101,3",
-    pressaoDestino: "101,3",
-    tipoPressao: "absoluta",
-    cotaOrigem: "1,5",
-    cotaDestino: "30",
-    rendBomba: "70",
-    rendMotor: "90",
-    horasDia: "16",
-    diasMes: "24",
-    tarifa: "0,92",
-    pressaoVapor: "47,4",
-    npshRequerido: "4,6",
-    razaoSegura: "1,3",
-    cotaOrigemAdicional: "0,3",
   };
 }
 
@@ -311,8 +159,8 @@ export function propriedadesAgua(temperatura: number): { rho: number; nu: number
 export type MetodoAtrito = "informado" | "Swamee-Jain" | "64/Re (laminar)";
 
 export type ResultadoLinha = {
-  diametroM: number;
-  comprimento: number;
+  diametro: number; // m
+  comprimento: number; // m
   area: number;
   velocidade: number;
   cargaCinetica: number;
@@ -325,6 +173,15 @@ export type ResultadoLinha = {
   hd: number;
   hloc: number;
   ht: number;
+};
+
+export type ResultadoBocal = {
+  diametro: number;
+  area: number;
+  velocidade: number;
+  cargaCinetica: number;
+  k: number;
+  perda: number;
 };
 
 export type ClasseNpsh = "segura" | "limitrofe" | "incompativel";
@@ -349,15 +206,17 @@ export type ResultadoProjeto = {
   fluidoNome: string;
   succao: ResultadoLinha | null;
   recalque: ResultadoLinha;
+  bocal: ResultadoBocal | null;
   perdaTotal: number;
   cargaPressao: number;
   cargaEstatica: number;
+  cargaCineticaSaida: number;
   alturaManometrica: number;
-  potenciaHidraulica: number;
-  potenciaEixo: number;
-  potenciaEletrica: number | null;
-  consumoMensal: number | null;
-  custoMensal: number | null;
+  potenciaHidraulica: number; // W
+  potenciaEixo: number; // W
+  potenciaEletrica: number | null; // W
+  consumoMensal: number | null; // kWh
+  custoMensal: number | null; // R$
   npsh: ResultadoNpsh | null;
   npshAdicional: ResultadoNpsh | null;
   razaoSegura: number;
@@ -386,6 +245,77 @@ function vazio(texto: string): boolean {
   return texto.trim() === "";
 }
 
+// Avalia expressões simples com + - * / e parênteses, sem usar eval.
+// Exemplo: "0,5+4*0,9+1" resulta em 5,1.
+export function avaliarExpressao(texto: string): number {
+  const limpo = texto.replace(/\s+/g, "").replace(/,/g, ".");
+  if (limpo === "" || !/^[0-9.+\-*/()]+$/.test(limpo)) {
+    return NaN;
+  }
+  const n = limpo.length;
+  let pos = 0;
+
+  function fator(): number {
+    if (pos >= n) {
+      return NaN;
+    }
+    const c = limpo[pos];
+    if (c === "-") {
+      pos = pos + 1;
+      return -fator();
+    }
+    if (c === "+") {
+      pos = pos + 1;
+      return fator();
+    }
+    if (c === "(") {
+      pos = pos + 1;
+      const v = soma();
+      if (pos >= n || limpo[pos] !== ")") {
+        return NaN;
+      }
+      pos = pos + 1;
+      return v;
+    }
+    const inicio = pos;
+    while (pos < n && /[0-9.]/.test(limpo[pos])) {
+      pos = pos + 1;
+    }
+    if (inicio === pos) {
+      return NaN;
+    }
+    return Number(limpo.slice(inicio, pos));
+  }
+
+  function produto(): number {
+    let v = fator();
+    while (pos < n && (limpo[pos] === "*" || limpo[pos] === "/")) {
+      const op = limpo[pos];
+      pos = pos + 1;
+      const w = fator();
+      v = op === "*" ? v * w : v / w;
+    }
+    return v;
+  }
+
+  function soma(): number {
+    let v = produto();
+    while (pos < n && (limpo[pos] === "+" || limpo[pos] === "-")) {
+      const op = limpo[pos];
+      pos = pos + 1;
+      const w = produto();
+      v = op === "+" ? v + w : v - w;
+    }
+    return v;
+  }
+
+  const resultado = soma();
+  if (pos !== n) {
+    return NaN;
+  }
+  return resultado;
+}
+
 export function classificarRegime(re: number): string {
   if (re < 2000) {
     return "Laminar";
@@ -401,26 +331,6 @@ export function swameeJain(rugosidadeRelativa: number, re: number): number {
   const termo = rugosidadeRelativa / 3.7 + 5.74 / Math.pow(re, 0.9);
   const logaritmo = Math.log10(termo);
   return 0.25 / (logaritmo * logaritmo);
-}
-
-export function somarK(acessorios: Acessorio[]): { soma: number; erro: string | null } {
-  let soma = 0;
-  for (const a of acessorios) {
-    if (vazio(a.qtd) && vazio(a.k)) {
-      continue;
-    }
-    const qtd = lerNumero(a.qtd);
-    const k = lerNumero(a.k);
-    if (isNaN(qtd) || isNaN(k) || qtd < 0 || k < 0) {
-      const nome = a.nome.trim() !== "" ? a.nome.trim() : "sem nome";
-      return {
-        soma: 0,
-        erro: "Acessório \"" + nome + "\": informe quantidade e K com números maiores ou iguais a zero.",
-      };
-    }
-    soma = soma + qtd * k;
-  }
-  return { soma: soma, erro: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -442,32 +352,29 @@ function calcularLinha(
 ): ResultadoLinha | null {
   const { titulo, linha, vazaoM3s, gravidade, nu } = dados;
 
-  const dMm = lerNumero(linha.diametro);
+  const diametro = lerNumero(linha.diametro);
   const comprimento = lerNumero(linha.comprimento);
+  const somaK = avaliarExpressao(linha.somaK);
   const inicioErros = erros.length;
 
-  if (isNaN(dMm) || dMm <= 0) {
-    erros.push(titulo + ": informe o diâmetro interno (maior que zero).");
+  if (isNaN(diametro) || diametro <= 0) {
+    erros.push(titulo + ": informe o diâmetro interno em metros (maior que zero).");
   }
   if (isNaN(comprimento) || comprimento <= 0) {
-    erros.push(titulo + ": informe o comprimento (maior que zero).");
+    erros.push(titulo + ": informe o comprimento em metros (maior que zero).");
+  }
+  if (isNaN(somaK) || somaK < 0) {
+    erros.push(titulo + ": informe a soma dos K (use 0 se não houver acessórios). Exemplo: 0,5+4*0,9+1.");
   }
 
-  const somaK = somarK(linha.acessorios);
-  if (somaK.erro !== null) {
-    erros.push(titulo + ": " + somaK.erro);
-  }
-
-  let rugosidadeM = NaN;
+  let rugosidade = NaN;
   let fInformado = NaN;
   if (linha.modoAtrito === "calcular") {
-    const eMm = lerNumero(linha.rugosidade);
-    if (isNaN(eMm) || eMm < 0) {
-      erros.push(titulo + ": informe a rugosidade absoluta (zero ou maior).");
-    } else if (!isNaN(dMm) && eMm >= dMm) {
+    rugosidade = lerNumero(linha.rugosidade);
+    if (isNaN(rugosidade) || rugosidade < 0) {
+      erros.push(titulo + ": informe a rugosidade absoluta em metros (zero ou maior).");
+    } else if (!isNaN(diametro) && rugosidade >= diametro) {
       erros.push(titulo + ": a rugosidade deve ser menor que o diâmetro interno.");
-    } else {
-      rugosidadeM = eMm / 1000;
     }
     if (nu === null) {
       erros.push(titulo + ": para calcular o fator de atrito, informe a viscosidade do fluido.");
@@ -483,15 +390,14 @@ function calcularLinha(
     return null;
   }
 
-  const diametroM = dMm / 1000;
-  const area = (Math.PI * diametroM * diametroM) / 4;
+  const area = (Math.PI * diametro * diametro) / 4;
   const velocidade = vazaoM3s / area;
   const cargaCinetica = (velocidade * velocidade) / (2 * gravidade);
 
   let reynolds: number | null = null;
   let regime: string | null = null;
   if (nu !== null) {
-    reynolds = (velocidade * diametroM) / nu;
+    reynolds = (velocidade * diametro) / nu;
     regime = classificarRegime(reynolds);
   }
 
@@ -502,7 +408,7 @@ function calcularLinha(
   if (linha.modoAtrito === "informado") {
     fatorAtrito = fInformado;
   } else {
-    rugosidadeRelativa = rugosidadeM / diametroM;
+    rugosidadeRelativa = rugosidade / diametro;
     const re = reynolds as number;
     if (re < 2000) {
       fatorAtrito = 64 / re;
@@ -514,16 +420,16 @@ function calcularLinha(
         avisos.push(titulo + ": Reynolds na faixa de transição (2000 a 4000); o fator de atrito é uma estimativa.");
       }
       if (re < 5000 || re > 1e8 || rugosidadeRelativa < 1e-6 || rugosidadeRelativa > 1e-2) {
-        avisos.push(titulo + ": valores fora da faixa de validade usual da equação de Swamee-Jain (5.000 a 100.000.000 de Reynolds e rugosidade relativa entre 0,000001 e 0,01).");
+        avisos.push(titulo + ": valores fora da faixa de validade usual da equação de Swamee-Jain (Reynolds de 5.000 a 100.000.000 e rugosidade relativa entre 0,000001 e 0,01).");
       }
     }
   }
 
-  const hd = fatorAtrito * (comprimento / diametroM) * cargaCinetica;
-  const hloc = somaK.soma * cargaCinetica;
+  const hd = fatorAtrito * (comprimento / diametro) * cargaCinetica;
+  const hloc = somaK * cargaCinetica;
 
   return {
-    diametroM: diametroM,
+    diametro: diametro,
     comprimento: comprimento,
     area: area,
     velocidade: velocidade,
@@ -533,7 +439,7 @@ function calcularLinha(
     rugosidadeRelativa: rugosidadeRelativa,
     fatorAtrito: fatorAtrito,
     metodoAtrito: metodoAtrito,
-    somaK: somaK.soma,
+    somaK: somaK,
     hd: hd,
     hloc: hloc,
     ht: hd + hloc,
@@ -591,18 +497,12 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
   // Gravidade e vazão
   const gravidade = lerNumero(p.gravidade);
   if (isNaN(gravidade) || gravidade <= 0) {
-    erros.push("Informe a aceleração da gravidade (maior que zero).");
+    erros.push("Informe a aceleração da gravidade em m/s² (maior que zero).");
   }
 
-  const vazaoDigitada = lerNumero(p.vazao);
-  if (isNaN(vazaoDigitada) || vazaoDigitada <= 0) {
-    erros.push("Informe a vazão (maior que zero).");
-  }
-  let vazaoM3s = vazaoDigitada;
-  if (p.unidadeVazao === "m3h") {
-    vazaoM3s = vazaoDigitada / 3600;
-  } else if (p.unidadeVazao === "ls") {
-    vazaoM3s = vazaoDigitada / 1000;
+  const vazaoM3s = lerNumero(p.vazao);
+  if (isNaN(vazaoM3s) || vazaoM3s <= 0) {
+    erros.push("Informe a vazão em m³/s (maior que zero). Exemplo: 0,012.");
   }
 
   // Fluido
@@ -623,7 +523,7 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
   } else {
     rho = lerNumero(p.fluido.densidade);
     if (isNaN(rho) || rho <= 0) {
-      erros.push("Informe a densidade do fluido (maior que zero).");
+      erros.push("Informe a massa específica do fluido em kg/m³ (maior que zero).");
     }
     fluidoNome = p.fluido.nome.trim() !== "" ? p.fluido.nome.trim() : "Fluido informado";
     if (!vazio(p.fluido.viscosidade)) {
@@ -631,9 +531,9 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
       if (isNaN(visc) || visc <= 0) {
         erros.push("A viscosidade do fluido deve ser um número maior que zero.");
       } else if (p.fluido.tipoViscosidade === "cinematica") {
-        nu = visc / 1e6; // mm²/s -> m²/s
+        nu = visc; // m²/s
       } else if (!isNaN(rho) && rho > 0) {
-        nu = visc / 1000 / rho; // mPa·s -> Pa·s, depois nu = mu / rho
+        nu = visc / rho; // nu = mu / rho, com mu em Pa·s
       }
     }
   }
@@ -644,15 +544,15 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
   const z1 = lerNumero(p.cotaOrigem);
   const z2 = lerNumero(p.cotaDestino);
   if (isNaN(p1) || isNaN(p2)) {
-    erros.push("Informe as pressões de origem e de destino (kPa).");
+    erros.push("Informe as pressões de origem e de destino em Pa (use 0 para reservatório aberto, se manométrica).");
   }
   if (isNaN(z1) || isNaN(z2)) {
-    erros.push("Informe as cotas de origem e de destino (m).");
+    erros.push("Informe as cotas de origem e de destino em metros.");
   }
 
   const rendBomba = lerNumero(p.rendBomba);
-  if (isNaN(rendBomba) || rendBomba <= 0 || rendBomba > 100) {
-    erros.push("Informe o rendimento da bomba entre 0 e 100 %.");
+  if (isNaN(rendBomba) || rendBomba <= 0 || rendBomba > 1) {
+    erros.push("Informe o rendimento da bomba como fração entre 0 e 1 (exemplo: 0,72).");
   }
 
   // Linhas
@@ -671,20 +571,57 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
     avisos
   );
 
+  // Bocal (saída em jato)
+  let bocal: ResultadoBocal | null = null;
+  if (p.bocal.ativo) {
+    const dBocal = lerNumero(p.bocal.diametro);
+    let kBocal = 0;
+    let bocalValido = true;
+    if (isNaN(dBocal) || dBocal <= 0) {
+      erros.push("Bocal: informe o diâmetro de saída em metros (maior que zero).");
+      bocalValido = false;
+    }
+    if (!vazio(p.bocal.k)) {
+      kBocal = avaliarExpressao(p.bocal.k);
+      if (isNaN(kBocal) || kBocal < 0) {
+        erros.push("Bocal: o K deve ser um número maior ou igual a zero (ou deixe em branco).");
+        bocalValido = false;
+      }
+    }
+    if (bocalValido && !isNaN(vazaoM3s) && !isNaN(gravidade)) {
+      const area = (Math.PI * dBocal * dBocal) / 4;
+      const velocidade = vazaoM3s / area;
+      const cargaCinetica = (velocidade * velocidade) / (2 * gravidade);
+      bocal = {
+        diametro: dBocal,
+        area: area,
+        velocidade: velocidade,
+        cargaCinetica: cargaCinetica,
+        k: kBocal,
+        perda: kBocal * cargaCinetica,
+      };
+    }
+  }
+
   if (erros.length > 0 || recalque === null) {
     return { resultado: null, erros: erros };
   }
+  if (p.bocal.ativo && bocal === null) {
+    return { resultado: null, erros: ["Verifique os dados do bocal."] };
+  }
 
-  // Bernoulli entre as superfícies (velocidades desprezíveis)
+  // Bernoulli entre as superfícies (velocidade na origem desprezível)
   const perdaSuccao = succao !== null ? succao.ht : 0;
-  const perdaTotal = perdaSuccao + recalque.ht;
-  const cargaPressao = ((p2 - p1) * 1000) / (rho * gravidade);
+  const perdaBocal = bocal !== null ? bocal.perda : 0;
+  const perdaTotal = perdaSuccao + recalque.ht + perdaBocal;
+  const cargaPressao = (p2 - p1) / (rho * gravidade);
   const cargaEstatica = z2 - z1;
-  const alturaManometrica = cargaPressao + cargaEstatica + perdaTotal;
+  const cargaCineticaSaida = bocal !== null ? bocal.cargaCinetica : 0;
+  const alturaManometrica = cargaPressao + cargaEstatica + cargaCineticaSaida + perdaTotal;
 
   // Potências
   const potenciaHidraulica = rho * gravidade * vazaoM3s * alturaManometrica;
-  const potenciaEixo = potenciaHidraulica / (rendBomba / 100);
+  const potenciaEixo = potenciaHidraulica / rendBomba;
 
   let potenciaEletrica: number | null = null;
   let consumoMensal: number | null = null;
@@ -692,10 +629,10 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
 
   if (!vazio(p.rendMotor)) {
     const rendMotor = lerNumero(p.rendMotor);
-    if (isNaN(rendMotor) || rendMotor <= 0 || rendMotor > 100) {
-      return { resultado: null, erros: ["O rendimento do motor deve estar entre 0 e 100 %."] };
+    if (isNaN(rendMotor) || rendMotor <= 0 || rendMotor > 1) {
+      return { resultado: null, erros: ["O rendimento do motor deve ser uma fração entre 0 e 1 (exemplo: 0,9)."] };
     }
-    potenciaEletrica = potenciaEixo / (rendMotor / 100);
+    potenciaEletrica = potenciaEixo / rendMotor;
 
     if (!vazio(p.horasDia) && !vazio(p.diasMes)) {
       const horas = lerNumero(p.horasDia);
@@ -725,23 +662,23 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
     const atm = lerNumero(p.pressaoAtm);
 
     if (isNaN(pv) || pv < 0 || isNaN(npshr) || npshr <= 0) {
-      return { resultado: null, erros: ["Informe a pressão de vapor (kPa abs) e o NPSH requerido (m) com valores válidos."] };
+      return { resultado: null, erros: ["Informe a pressão de vapor em Pa (absoluta) e o NPSH requerido em m com valores válidos."] };
     }
     if (isNaN(razaoSegura) || razaoSegura < 1) {
       return { resultado: null, erros: ["A razão mínima segura NPSHA/NPSHR deve ser um número maior ou igual a 1."] };
     }
     if (p.tipoPressao === "manometrica" && (isNaN(atm) || atm <= 0)) {
-      return { resultado: null, erros: ["Informe a pressão atmosférica (kPa) para converter a pressão manométrica em absoluta."] };
+      return { resultado: null, erros: ["Informe a pressão atmosférica em Pa para converter a pressão manométrica em absoluta."] };
     }
 
-    let pressaoAbs = p1 * 1000;
+    let pressaoAbs = p1;
     if (p.tipoPressao === "manometrica") {
-      pressaoAbs = (p1 + atm) * 1000;
+      pressaoAbs = p1 + atm;
     }
 
     npsh = calcularNpsh({
       pressaoOrigemAbs: pressaoAbs,
-      pressaoVapor: pv * 1000,
+      pressaoVapor: pv,
       rho: rho,
       gravidade: gravidade,
       cotaOrigem: z1,
@@ -757,7 +694,7 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
       }
       npshAdicional = calcularNpsh({
         pressaoOrigemAbs: pressaoAbs,
-        pressaoVapor: pv * 1000,
+        pressaoVapor: pv,
         rho: rho,
         gravidade: gravidade,
         cotaOrigem: zAdicional,
@@ -778,9 +715,11 @@ export function calcularProjeto(p: Projeto): RespostaCalculo {
       fluidoNome: fluidoNome,
       succao: succao,
       recalque: recalque,
+      bocal: bocal,
       perdaTotal: perdaTotal,
       cargaPressao: cargaPressao,
       cargaEstatica: cargaEstatica,
+      cargaCineticaSaida: cargaCineticaSaida,
       alturaManometrica: alturaManometrica,
       potenciaHidraulica: potenciaHidraulica,
       potenciaEixo: potenciaEixo,
