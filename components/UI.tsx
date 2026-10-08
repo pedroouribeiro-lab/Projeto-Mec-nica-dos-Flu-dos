@@ -112,17 +112,24 @@ export function Campo(props: {
   placeholder?: string;
   decimal?: boolean;
   ajuda?: string;
+  obrigatorio?: boolean;
 }) {
+  const faltando = props.obrigatorio === true && props.valor.trim() === "";
   return (
     <div>
-      <label style={estiloRotulo}>{props.rotulo}</label>
+      <label style={estiloRotulo}>
+        {props.rotulo}
+        {props.obrigatorio === true && (
+          <span style={{ color: cor.vermelho }}> *</span>
+        )}
+      </label>
       <input
         type="text"
         inputMode={props.decimal === false ? "text" : "decimal"}
         value={props.valor}
         onChange={(ev) => props.aoMudar(ev.target.value)}
         placeholder={props.placeholder}
-        style={estiloCampo}
+        style={faltando ? { ...estiloCampo, border: "1px solid #b45309" } : estiloCampo}
       />
       {props.ajuda !== undefined && (
         <div style={{ fontSize: "12px", color: cor.apagado, marginTop: "4px" }}>

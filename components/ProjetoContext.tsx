@@ -7,22 +7,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  exemplo,
-  projetoVazio,
-  type IdExemplo,
-  type Projeto,
-} from "../lib/hidraulica";
+import { projetoVazio, type Projeto } from "../lib/hidraulica";
 
 type Contexto = {
   projeto: Projeto;
   carregado: boolean;
   atualizar: (mudar: (anterior: Projeto) => Projeto) => void;
-  carregarExemplo: (id: IdExemplo) => void;
   limpar: () => void;
 };
 
-const CHAVE = "hydrocalc-projeto-v1";
+const CHAVE = "hydrocalc-projeto-sessao";
 
 const ProjetoContext = createContext<Contexto | null>(null);
 
@@ -37,16 +31,9 @@ function mesclar(salvo: Partial<Projeto>): Projeto {
         ? salvo.membros
         : base.membros,
     fluido: { ...base.fluido, ...(salvo.fluido ?? {}) },
-    succao: {
-      ...base.succao,
-      ...(salvo.succao ?? {}),
-      acessorios: salvo.succao?.acessorios ?? base.succao.acessorios,
-    },
-    recalque: {
-      ...base.recalque,
-      ...(salvo.recalque ?? {}),
-      acessorios: salvo.recalque?.acessorios ?? base.recalque.acessorios,
-    },
+    succao: { ...base.succao, ...(salvo.succao ?? {}) },
+    recalque: { ...base.recalque, ...(salvo.recalque ?? {}) },
+    bocal: { ...base.bocal, ...(salvo.bocal ?? {}) },
   };
 }
 
@@ -54,10 +41,10 @@ export function ProjetoProvider({ children }: { children: ReactNode }) {
   const [projeto, setProjeto] = useState<Projeto>(projetoVazio());
   const [carregado, setCarregado] = useState<boolean>(false);
 
-  // Ao abrir o site, recupera os dados salvos neste navegador
+  // Ao recarregar a página, recupera os dados digitados nesta aba (a sessão termina ao fechar a aba)
   useEffect(() => {
     try {
-      const texto = window.localStorage.getItem(CHAVE);
+      const texto = window.sessionStorage.getItem(CHAVE);
       if (texto !== null) {
         setProjeto(mesclar(JSON.parse(texto) as Partial<Projeto>));
       }
@@ -73,7 +60,7 @@ export function ProjetoProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      window.localStorage.setItem(CHAVE, JSON.stringify(projeto));
+      window.sessionStorage.setItem(CHAVE, JSON.stringify(projeto));
     } catch {
       // se não for possível salvar, o site continua funcionando
     }
@@ -83,17 +70,13 @@ export function ProjetoProvider({ children }: { children: ReactNode }) {
     setProjeto((anterior) => mudar(anterior));
   }
 
-  function carregarExemplo(id: IdExemplo) {
-    setProjeto(exemplo(id));
-  }
-
   function limpar() {
     setProjeto(projetoVazio());
   }
 
   return (
     <ProjetoContext.Provider
-      value={{ projeto, carregado, atualizar, carregarExemplo, limpar }}
+      value={{ projeto, carregado, atualizar, limpar }}
     >
       {children}
     </ProjetoContext.Provider>
