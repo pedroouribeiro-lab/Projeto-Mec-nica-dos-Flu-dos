@@ -8,12 +8,12 @@ import { calcularProjeto, type ClasseNpsh } from "../lib/hidraulica";
 
 function textoClasse(classe: ClasseNpsh): string {
   if (classe === "segura") {
-    return "Segura";
+    return "Cavitação: baixa";
   }
   if (classe === "limitrofe") {
-    return "Limítrofe";
+    return "Cavitação: média";
   }
-  return "Incompatível";
+  return "Cavitação: alta";
 }
 
 function corClasse(classe: ClasseNpsh): string {
