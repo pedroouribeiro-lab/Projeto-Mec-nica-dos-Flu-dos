@@ -742,18 +742,18 @@ function Folha(props: {
             </div>
           </>
         )}
-      </Secao>
 
-      <Secao titulo="5. Premissas e observações">
-        <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", lineHeight: 1.65 }}>
-          <li>Todas as grandezas estão no Sistema Internacional, exceto a temperatura (°C) e as unidades de faturamento (h/dia, dias/mês e R$/kWh).</li>
-          <li>Velocidade na superfície do reservatório de origem desprezada; cotas referidas ao eixo da bomba.</li>
-          <li>Fator de atrito calculado pela equação de Swamee-Jain quando não informado.</li>
-          <li>O fator de segurança mínimo ({fmt(r.razaoSegura, 2)}) é uma premissa editável do projeto.</li>
-          {r.avisos.map((a, i) => (
-            <li key={i}>{a}</li>
-          ))}
-        </ul>
+        <p
+          style={{
+            fontSize: "11px",
+            lineHeight: 1.5,
+            color: papel.suave,
+            margin: "10px 0 0 0",
+          }}
+        >
+          Observação: o fator de segurança mínimo adotado ({fmt(r.razaoSegura, 2)}) é uma premissa
+          editável do projeto.
+        </p>
       </Secao>
 
       <footer
@@ -844,7 +844,7 @@ export default function RelatoriosPage() {
               Salvar como PDF
             </Botao>
             <span style={{ color: cor.suave, fontSize: "13px" }}>
-              Na janela que abrir, escolha “Salvar como PDF” como destino e ative “Gráficos de segundo plano”.
+              Na janela que abrir, escolha “Salvar como PDF” como destino e desmarque “Cabeçalhos e rodapés”.
             </span>
           </div>
           <Folha p={projeto} r={resultado} lim={calculo.limites} data={data} />
