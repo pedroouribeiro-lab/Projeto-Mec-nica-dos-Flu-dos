@@ -8,7 +8,6 @@ const ITENS: { href: string; rotulo: string }[] = [
   { href: "/novo-projeto", rotulo: "📁 Novo Projeto" },
   { href: "/analise-hidraulica", rotulo: "🌊 Análise Hidráulica" },
   { href: "/cavitacao", rotulo: "💧 Cavitação" },
-  { href: "/resultados", rotulo: "📊 Resultados" },
   { href: "/memoria-calculo", rotulo: "🧮 Memória de Cálculo" },
   { href: "/relatorios", rotulo: "📄 Relatórios" },
 ];
