@@ -1,4 +1,28 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const ITENS: { href: string; rotulo: string }[] = [
+  { href: "/", rotulo: "🏠 Dashboard" },
+  { href: "/novo-projeto", rotulo: "📁 Novo Projeto" },
+  { href: "/analise-hidraulica", rotulo: "🌊 Análise Hidráulica" },
+  { href: "/cavitacao", rotulo: "💧 Cavitação" },
+  { href: "/resultados", rotulo: "📊 Resultados" },
+  { href: "/memoria-calculo", rotulo: "🧮 Memória de Cálculo" },
+  { href: "/relatorios", rotulo: "📄 Relatórios" },
+];
+
 export default function Sidebar() {
+  const caminho = usePathname();
+
+  function ativo(href: string): boolean {
+    if (href === "/") {
+      return caminho === "/";
+    }
+    return caminho === href || caminho.startsWith(href + "/");
+  }
+
   return (
     <div
       style={{
@@ -23,21 +47,36 @@ export default function Sidebar() {
 
       <hr />
 
-      <div
+      <nav
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "25px",
+          gap: "8px",
           marginTop: "25px",
         }}
       >
-        <p>🏠 Dashboard</p>
-        <p>📁 Novo Projeto</p>
-        <p>🌊 Análise Hidráulica</p>
-        <p>📊 Resultados</p>
-        <p>🧮 Memória de Cálculo</p>
-        <p>📄 Relatórios</p>
-      </div>
+        {ITENS.map((item) => {
+          const selecionado = ativo(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                display: "block",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontSize: "15px",
+                fontWeight: selecionado ? 700 : 400,
+                color: selecionado ? "#ffffff" : "#9ca3af",
+                backgroundColor: selecionado ? "#3B82F6" : "transparent",
+              }}
+            >
+              {item.rotulo}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }
