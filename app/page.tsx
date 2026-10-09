@@ -229,9 +229,8 @@ export default function DashboardPage() {
           <Modulo nome="Novo Projeto" rota="/novo-projeto" />
           <Modulo nome="Análise Hidráulica" rota="/analise-hidraulica" />
           <Modulo nome="Cavitação" rota="/cavitacao" />
-          <Modulo nome="Resultados" />
-          <Modulo nome="Memória de Cálculo" />
-          <Modulo nome="Relatórios" />
+          <Modulo nome="Memória de Cálculo" rota="/memoria-calculo" />
+          <Modulo nome="Relatórios" rota="/relatorios" />
         </div>
       </div>
     </div>
